@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>رابطي - تحميل قوائم يوتيوب كاملة</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome للأيقونات -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid #667eea;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+        .video-item {
+            transition: all 0.3s ease;
+            border-right: 4px solid transparent;
+        }
+        .video-item:hover {
+            border-right-color: #667eea;
+            background-color: #f9fafb;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+    <div class="container max-w-4xl mx-auto">
+        <!-- الكارد الرئيسي -->
+        <div class="bg-white rounded-2xl shadow-2xl p-8 md:p-10">
+            <!-- العنوان -->
+            <div class="text-center mb-10">
+                <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-download text-indigo-600 ml-2"></i>
+                    رابطي
+                </h1>
+                <p class="text-gray-600 text-lg">حمّل قوائم تشغيل يوتيوب كاملة بضغطة زر واحدة</p>
+            </div>
+
+            <!-- نموذج الإدخال -->
+            <div class="space-y-6">
+                <!-- اختيار المنصة -->
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">
+                        <i class="fab fa-youtube text-red-600 ml-1"></i>
+                        اختر المنصة
+                    </label>
+                    <div class="relative">
+                        <select id="platform" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition bg-white appearance-none cursor-pointer text-gray-700">
+                            <option value="youtube" selected class="py-2">يوتيوب (YouTube)</option>
+                        </select>
+                        <div class="pointer-events-none absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- حقل الرابط -->
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-2">
+                        <i class="fas fa-link text-green-600 ml-1"></i>
+                        رابط الفيديو أو القائمة
+                    </label>
+                    <input type="url" id="urlInput" placeholder="https://www.youtube.com/playlist?list=..." 
+                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition dir-ltr text-left">
+                </div>
+
+                <!-- اختيار النوع (فيديو واحد / قائمة) -->
+                <div>
+                    <label class="block text-gray-700 font-semibold mb-3">
+                        <i class="fas fa-list-ul text-blue-600 ml-1"></i>
+                        نوع المحتوى
+                    </label>
+                    <div class="flex gap-4">
+                        <label class="flex-1 relative">
+                            <input type="radio" name="contentType" value="single" class="peer hidden">
+                            <div class="flex items-center justify-center gap-2 p-4 border-2 border-gray-200 rounded-xl cursor-pointer peer-checked:border-indigo-500 peer-checked:bg-indigo-50 hover:bg-gray-50 transition">
+                                <i class="fas fa-video text-gray-500 peer-checked:text-indigo-600"></i>
+                                <span class="font-medium text-gray-700 peer-checked:text-indigo-700">فيديو واحد</span>
+                            </div>
+                        </label>
+                        <label class="flex-1 relative">
+                            <input type="radio" name="contentType" value="playlist" checked class="peer hidden">
+                            <div class="flex items-center justify-center gap-2 p-4 border-2 border-gray-200 rounded-xl cursor-pointer peer-checked:border-indigo-500 peer-checked:bg-indigo-50 hover:bg-gray-50 transition">
+                                <i class="fas fa-list text-gray-500 peer-checked:text-indigo-600"></i>
+                                <span class="font-medium text-gray-700 peer-checked:text-indigo-700">قائمة تشغيل</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- زر التحميل الرئيسي -->
+                <button id="downloadBtn" class="w-full bg-gradient-to-l from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-bold text-lg hover:from-indigo-700 hover:to-purple-700 transform hover:scale-[1.02] transition duration-200 shadow-lg flex items-center justify-center gap-2">
+                    <i class="fas fa-download"></i>
+                    <span>ابدأ التحميل</span>
+                </button>
+            </div>
+
+            <!-- رسالة الخطأ -->
+            <div id="errorMessage" class="mt-4 p-4 bg-red-50 border-r-4 border-red-500 text-red-700 rounded-lg hidden">
+                <i class="fas fa-exclamation-circle ml-2"></i>
+                <span id="errorText"></span>
+            </div>
+
+            <!-- قسم عرض القائمة والفيديوهات -->
+            <div id="playlistSection" class="mt-8 hidden">
+                <!-- معلومات القائمة -->
+                <div class="bg-gradient-to-l from-indigo-50 to-purple-50 p-6 rounded-xl mb-6">
+                    <div class="flex items-start gap-4">
+                        <img id="playlistThumb" src="" alt="صورة القائمة" class="w-24 h-24 rounded-lg object-cover shadow-md">
+                        <div class="flex-1">
+                            <h2 id="playlistTitle" class="text-xl font-bold text-gray-800 mb-2"></h2>
+                            <p id="playlistInfo" class="text-gray-600 mb-3"></p>
+                            <!-- شريط التقدم الكلي -->
+                            <div class="space-y-2">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">التقدم الكلي:</span>
+                                    <span id="totalProgressPercent" class="font-semibold text-indigo-600">0%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div id="totalProgressBar" class="bg-indigo-600 h-2.5 rounded-full progress-bar" style="width: 0%"></div>
+                                </div>
+                                <p id="downloadStats" class="text-sm text-gray-500">تم تحميل <span id="completedCount">0</span> من <span id="totalVideos">0</span> فيديو</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- زر تحميل الكل (زر واحد) -->
+                <button id="downloadAllBtn" class="w-full bg-green-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-green-700 transition duration-200 shadow-lg mb-6 flex items-center justify-center gap-2">
+                    <i class="fas fa-cloud-download-alt"></i>
+                    <span>تحميل الكل دفعة واحدة</span>
+                </button>
+
+                <!-- قائمة الفيديوهات -->
+                <div class="space-y-3 max-h-96 overflow-y-auto p-2">
+                    <h3 class="font-semibold text-gray-700 mb-3 sticky top-0 bg-white py-2">
+                        <i class="fas fa-video ml-2 text-indigo-600"></i>
+                        الفيديوهات في القائمة:
+                    </h3>
+                    <div id="videosList" class="space-y-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // عناصر DOM
+        const platform = document.getElementById('platform');
+        const urlInput = document.getElementById('urlInput');
+        const contentTypeRadios = document.getElementsByName('contentType');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const downloadAllBtn = document.getElementById('downloadAllBtn');
+        const playlistSection = document.getElementById('playlistSection');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+        const videosList = document.getElementById('videosList');
+        const playlistTitle = document.getElementById('playlistTitle');
+        const playlistThumb = document.getElementById('playlistThumb');
+        const playlistInfo = document.getElementById('playlistInfo');
+        const totalProgressBar = document.getElementById('totalProgressBar');
+        const totalProgressPercent = document.getElementById('totalProgressPercent');
+        const completedCount = document.getElementById('completedCount');
+        const totalVideos = document.getElementById('totalVideos');
+
+        // حالة التحميل
+        let currentPlaylist = [];
+        let downloadStatus = {};
+        let activeDownloads = 0;
+        let isDownloading = false;
+
+        // دالة إظهار الخطأ
+        function showError(message) {
+            errorText.textContent = message;
+            errorMessage.classList.remove('hidden');
+            setTimeout(() => {
+                errorMessage.classList.add('hidden');
+            }, 5000);
+        }
+
+        // دالة استخراج رابط القائمة
+        function extractPlaylistId(url) {
+            // بنج اله القوائم
+            const playlistRegex = /[&?]list=([^&]+)/;
+            const match = url.match(playlistRegex);
+            return match ? match[1] : null;
+        }
+
+        // دالة استخراج رابط الفيديو
+        function extractVideoId(url) {
+            const videoRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+            const match = url.match(videoRegex);
+            return match ? match[1] : null;
+        }
+
+        // دالة جلب معلومات القائمة (محاكاة)
+        async function fetchPlaylistInfo(playlistId) {
+            // في الواقع هنعمل API call حقيقية
+            // دلوقتي بنستخدم بيانات وهمية للعرض
+            return {
+                title: 'أفضل أغاني 2024',
+                videoCount: 15,
+                thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+                videos: Array(15).fill().map((_, i) => ({
+                    id: `video${i + 1}`,
+                    title: `فيديو ${i + 1} - أغنية رائعة`,
+                    duration: '3:45',
+                    thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+                    quality: '1080p'
+                }))
+            };
+        }
+
+        // دالة بدء تحميل فيديو واحد
+        function downloadVideo(video, index) {
+            return new Promise((resolve) => {
+                // محاكاة التحميل
+                let progress = 0;
+                downloadStatus[video.id] = { progress: 0, status: 'downloading' };
+                updateVideoProgress(video.id, 0);
+                
+                const interval = setInterval(() => {
+                    progress += Math.random() * 10;
+                    if (progress >= 100) {
+                        progress = 100;
+                        clearInterval(interval);
+                        downloadStatus[video.id] = { progress: 100, status: 'completed' };
+                        updateVideoProgress(video.id, 100);
+                        activeDownloads--;
+                        
+                        // تحديث الإحصائيات
+                        const completed = Object.values(downloadStatus).filter(v => v.progress === 100).length;
+                        completedCount.textContent = completed;
+                        
+                        if (activeDownloads === 0) {
+                            isDownloading = false;
+                            downloadAllBtn.disabled = false;
+                            downloadAllBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        }
+                        
+                        updateTotalProgress();
+                        resolve();
+                    }
+                    
+                    downloadStatus[video.id] = { progress: Math.min(progress, 100), status: 'downloading' };
+                    updateVideoProgress(video.id, Math.min(progress, 100));
+                    updateTotalProgress();
+                }, 200);
+            });
+        }
+
+        // دالة تحديث شريط تقدم فيديو
+        function updateVideoProgress(videoId, progress) {
+            const progressBar = document.getElementById(`progress-${videoId}`);
+            const progressText = document.getElementById(`progress-text-${videoId}`);
+            const statusIcon = document.getElementById(`status-${videoId}`);
+            
+            if (progressBar) progressBar.style.width = `${progress}%`;
+            if (progressText) progressText.textContent = `${Math.round(progress)}%`;
+            
+            if (statusIcon) {
+                if (progress === 100) {
+                    statusIcon.className = 'fas fa-check-circle text-green-500';
+                } else {
+                    statusIcon.className = 'fas fa-spinner fa-spin text-indigo-600';
+                }
+            }
+        }
+
+        // دالة تحديث التقدم الكلي
+        function updateTotalProgress() {
+            const videos = Object.values(downloadStatus);
+            if (videos.length === 0) return;
+            
+            const totalProgress = videos.reduce((sum, v) => sum + v.progress, 0) / videos.length;
+            totalProgressBar.style.width = `${totalProgress}%`;
+            totalProgressPercent.textContent = `${Math.round(totalProgress)}%`;
+            
+            const completed = videos.filter(v => v.progress === 100).length;
+            completedCount.textContent = completed;
+        }
+
+        // دالة عرض الفيديوهات في القائمة
+        function displayVideos(videos) {
+            videosList.innerHTML = '';
+            videos.forEach((video, index) => {
+                downloadStatus[video.id] = { progress: 0, status: 'pending' };
+                
+                const videoElement = document.createElement('div');
+                videoElement.className = 'video-item bg-white border border-gray-200 rounded-lg p-3 flex items-center gap-3';
+                videoElement.innerHTML = `
+                    <div class="relative">
+                        <img src="${video.thumbnail}" alt="${video.title}" class="w-20 h-14 rounded object-cover">
+                        <span class="absolute bottom-1 left-1 bg-black bg-opacity-75 text-white text-xs px-1 rounded">${video.duration}</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-medium text-gray-800 truncate">${video.title}</h4>
+                        <div class="flex items-center gap-2 mt-2">
+                            <div class="flex-1 bg-gray-200 rounded-full h-2">
+                                <div id="progress-${video.id}" class="bg-indigo-600 h-2 rounded-full progress-bar" style="width: 0%"></div>
+                            </div>
+                            <span id="progress-text-${video.id}" class="text-xs text-gray-600 min-w-[40px]">0%</span>
+                            <i id="status-${video.id}" class="fas fa-clock text-gray-400"></i>
+                        </div>
+                    </div>
+                    <span class="text-xs text-gray-500">${video.quality}</span>
+                `;
+                videosList.appendChild(videoElement);
+            });
+        }
+
+        // دالة بدء تحميل كل الفيديوهات معاً
+        async function downloadAllVideos() {
+            if (isDownloading || currentPlaylist.length === 0) return;
+            
+            isDownloading = true;
+            activeDownloads = currentPlaylist.length;
+            downloadAllBtn.disabled = true;
+            downloadAllBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            
+            // بدأ تحميل كل الفيديوهات في نفس الوقت (parallel)
+            const downloadPromises = currentPlaylist.map((video, index) => downloadVideo(video, index));
+            
+            try {
+                await Promise.all(downloadPromises);
+            } catch (error) {
+                showError('حدث خطأ أثناء التحميل');
+            }
+        }
+
+        // حدث عند الضغط على زر التحميل الرئيسي
+        downloadBtn.addEventListener('click', async () => {
+            const url = urlInput.value.trim();
+            const isPlaylist = document.querySelector('input[name="contentType"]:checked').value === 'playlist';
+            
+            if (!url) {
+                showError('من فضلك أدخل رابط يوتيوب صحيح');
+                return;
+            }
+
+            // إظهار التحميل
+            downloadBtn.disabled = true;
+            downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحميل...';
+
+            try {
+                let playlistId, videoId;
+                
+                if (isPlaylist) {
+                    playlistId = extractPlaylistId(url);
+                    if (!playlistId) {
+                        showError('رابط القائمة غير صحيح');
+                        return;
+                    }
+                } else {
+                    videoId = extractVideoId(url);
+                    if (!videoId) {
+                        showError('رابط الفيديو غير صحيح');
+                        return;
+                    }
+                    // للفيديو الواحد، بنعمل قائمة وهمية
+                    playlistId = 'single_video';
+                }
+
+                // جلب معلومات القائمة
+                const playlistData = await fetchPlaylistInfo(playlistId);
+                
+                // عرض معلومات القائمة
+                playlistTitle.textContent = playlistData.title;
+                playlistThumb.src = playlistData.thumbnail;
+                playlistInfo.textContent = `${playlistData.videoCount} فيديو • ${playlistData.videoCount * 3} دقيقة`;
+                totalVideos.textContent = playlistData.videoCount;
+                
+                // حفظ الفيديوهات وعرضها
+                currentPlaylist = playlistData.videos;
+                displayVideos(currentPlaylist);
+                
+                // إظهار القسم
+                playlistSection.classList.remove('hidden');
+                
+            } catch (error) {
+                showError('حدث خطأ في جلب البيانات');
+            } finally {
+                downloadBtn.disabled = false;
+                downloadBtn.innerHTML = '<i class="fas fa-download"></i><span>ابدأ التحميل</span>';
+            }
+        });
+
+        // حدث تحميل الكل
+        downloadAllBtn.addEventListener('click', downloadAllVideos);
+    </script>
+</body>
+</html>
